@@ -15,7 +15,12 @@ type Block struct {
 }
 
 func NewBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}}
+	block := &Block{
+		time.Now().Unix(),
+		[]byte(data),
+		prevBlockHash,
+		[]byte{},
+	}
 	block.SetHash()
 
 	return block

@@ -14,6 +14,10 @@ type Block struct {
 	Hash          []byte
 }
 
+func NewGenesisBlock() *Block {
+	return NewBlock("Genesis Block", []byte{})
+}
+
 func NewBlock(data string, prevBlockHash []byte) *Block {
 	block := &Block{
 		time.Now().Unix(),

@@ -18,6 +18,14 @@ func NewGenesisBlock() *Block {
 	return NewBlock("Genesis Block", []byte{})
 }
 
+func (b *Block) SetHash() {
+	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
+	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
+	hash := sha256.Sum256(headers)
+
+	b.Hash = hash[:]
+}
+
 func NewBlock(data string, prevBlockHash []byte) *Block {
 	block := &Block{
 		time.Now().Unix(),
@@ -28,12 +36,4 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 	block.SetHash()
 
 	return block
-}
-
-func (b *Block) SetHash() {
-	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
-	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
-	hash := sha256.Sum256(headers)
-
-	b.Hash = hash[:]
 }

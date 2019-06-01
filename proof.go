@@ -2,9 +2,14 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
-	"log"
+	"crypto/sha256"
+	"fmt"
+	"math"
 	"math/big"
+)
+
+var (
+	maxNonce = math.MaxInt64
 )
 
 const targetBits = 24
@@ -34,12 +39,29 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	)
 }
 
-func IntToHex(num int64) []byte {
-	buff := new(bytes.Buffer)
-	err := binary.Write(buff, binary.BigEndian, num)
-	if err != nil {
-		log.Panic(err)
+func (pow *ProofOfWork) Run() (int, []byte) {
+	var hashInt big.Int
+	var hash [32]byte
+	nonce := 0
+
+	fmt.Printf("Mining the block containing \"%s\"\n", pow.block.Data)
+
+	for nonce < maxNonce {
+		data := pow.prepareData(nonce)
+		hash = sha256.Sum256(data)
+		fmt.Printf("\r%x", hash)
+		hashInt.SetBytes(hash[:])
+
+		if hashInt.Cmp(pow.target) == -1 {
+
+			break
+		} else {
+
+			nonce++
+		}
 	}
 
-	return buff.Bytes()
+	fmt.Printf("\n\n")
+
+	return nonce, hash[:]
 }

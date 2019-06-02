@@ -1,17 +1,74 @@
 package main
 
+import (
+	"fmt"
+	"log"
+
+	"github.com/boltdb/bolt"
+)
+
+const dbFile = "blockchain.db"
+const blocksBucket = "blocks"
+
 type Blockchain struct {
-	blocks []*Block
+	tip []byte
+	db  *bolt.DB
 }
 
 func NewBlockChain() *Blockchain {
-	return &Blockchain{
-		[]*Block{NewGenesisBlock()},
+	var tip []byte
+
+	db, err := bolt.Open(dbFile, 0600, nil)
+	if err != nil {
+		log.Panic("Could not init DB", err)
 	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket([]byte(blocksBucket))
+
+		if b == nil {
+			fmt.Println("No existint blockchain found. Creating a new one...")
+
+			// Create bucket
+			b, err := tx.CreateBucket([]byte(blocksBucket))
+			if err != nil {
+				log.Panic("Coudld not create bucket", err)
+				return err
+			}
+
+			// Create + Insert Genesis block
+			genesis := NewGenesisBlock()
+			err = b.Put(genesis.Hash, genesis.Serialize())
+			if err != nil {
+				log.Panic("Could not insert Genesis Block", err)
+				return err
+			}
+
+			// Mark last block available is Genesis block
+			err = b.Put([]byte("l"), genesis.Hash)
+			if err != nil {
+				log.Panic("Could not insert tail pointer", err)
+				return err
+			}
+
+			tip = genesis.Hash
+		} else {
+
+			tip = b.Get([]byte("l"))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return &Blockchain{tip, db}
 }
 
 func (bc *Blockchain) AddBlock(data string) {
-	prevBlock := bc.blocks[len(bc.blocks)-1]
-	newBlock := NewBlock(data, prevBlock.Hash)
-	bc.blocks = append(bc.blocks, newBlock)
+	// TODO
+
 }

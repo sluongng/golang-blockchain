@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  bolt:
+    image: rossriley/docker-bolt:3.6
+    network_mode: bridge
+    environment:
+      - BOLT_TITLE= Son Luong's Site
+    volumes:
+      - .boltDb/db-data:/var/www/html/app/database
+      - .boltDb/files:/var/www/html/public/files
+      - .boltDb/extensions:/var/www/html/extensions

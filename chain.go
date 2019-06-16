@@ -77,7 +77,6 @@ func (bc *Blockchain) AddBlock(data string) {
 		b := tx.Bucket([]byte(blocksBucket))
 		lastHash = b.Get([]byte("l"))
 
-		// TODO
 		return nil
 	})
 	if err != nil {
@@ -97,7 +96,7 @@ func (bc *Blockchain) AddBlock(data string) {
 
 		err = b.Put([]byte("l"), newBlock.Hash)
 		if err != nil {
-			log.Panic("Failed to update Last Hash", err)
+			log.Panic("Failed to update last hash", err)
 			return err
 		}
 

@@ -27,8 +27,9 @@ func NewBlockChain() *Blockchain {
 
 		b := tx.Bucket([]byte(blocksBucket))
 
+		// If not found Blockchain
 		if b == nil {
-			fmt.Println("No existint blockchain found. Creating a new one...")
+			fmt.Println("No previous blockchain found. Creating a new one...")
 
 			// Create bucket
 			b, err := tx.CreateBucket([]byte(blocksBucket))
@@ -69,6 +70,25 @@ func NewBlockChain() *Blockchain {
 }
 
 func (bc *Blockchain) AddBlock(data string) {
-	// TODO
+	var lastHash []byte
+
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blocksBucket))
+		lastHash = b.Get([]byte("l"))
+
+		// TODO
+		return nil
+	})
+
+	newBlock := NewBlock(data, lastHash)
+
+	err = bc.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blockBucket))
+		err := b.Put(newBlock.Hash, newBlock.Serialize())
+		err = b.Put([]byte("l"), newBlock.Hash)
+		bc.tip = newBlock.Hash
+
+		return nil
+	})
 
 }

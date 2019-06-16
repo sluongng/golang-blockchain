@@ -72,6 +72,7 @@ func NewBlockChain() *Blockchain {
 func (bc *Blockchain) AddBlock(data string) {
 	var lastHash []byte
 
+	// Get Last hash
 	err := bc.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 		lastHash = b.Get([]byte("l"))
@@ -79,13 +80,27 @@ func (bc *Blockchain) AddBlock(data string) {
 		// TODO
 		return nil
 	})
+	if err != nil {
+		log.Panic("Failed to get last hash", err)
+	}
 
+	// Create and store new block
 	newBlock := NewBlock(data, lastHash)
-
 	err = bc.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(blockBucket))
+		b := tx.Bucket([]byte(blocksBucket))
+
 		err := b.Put(newBlock.Hash, newBlock.Serialize())
+		if err != nil {
+			log.Panic("Failed to store new block", err)
+			return err
+		}
+
 		err = b.Put([]byte("l"), newBlock.Hash)
+		if err != nil {
+			log.Panic("Failed to update Last Hash", err)
+			return err
+		}
+
 		bc.tip = newBlock.Hash
 
 		return nil

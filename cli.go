@@ -13,11 +13,16 @@ type CLI struct {
 }
 
 func (cli *CLI) validateArgs() {
-	// TODO
+	if len(os.Args) < 2 {
+		cli.printUsage()
+		os.Exit(1)
+	}
 }
 
 func (cli *CLI) printUsage() {
-	// TODO
+	fmt.Println("Usage:")
+	fmt.Println("  addblock -data <BLOCK_DATA> - add a block to the chain")
+	fmt.Println("  printchain - print all the blocks in the chain")
 }
 
 func (cli *CLI) Run() {

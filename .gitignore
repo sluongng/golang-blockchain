@@ -1,2 +1,4 @@
-./boltDb
-./bin
+bin
+
+boltDb
+*.db

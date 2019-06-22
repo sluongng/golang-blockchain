@@ -9,9 +9,7 @@ type ChainIterator struct {
 }
 
 func (bc *Blockchain) Iterator() *ChainIterator {
-	ci := &ChainIterator{bc.tip, bc.db}
-
-	return ci
+	return &ChainIterator{bc.tip, bc.db}
 }
 
 func (i *ChainIterator) Next() *Block {

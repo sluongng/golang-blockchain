@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	sha256 "crypto/sha256"
 	"encoding/gob"
 	"log"
 	"time"
@@ -34,6 +35,17 @@ func NewBlock(transactions []*Transaction, prevBlockHash []byte) *Block {
 	block.Nonce = nonce
 
 	return block
+}
+
+func (b *Block) HashTransaction() []byte {
+	var txHashes [][]byte
+	for _, tx := range b.Transaction {
+		txHashes = append(txHashes, tx.ID)
+	}
+
+	var txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+
+	return txHash[:]
 }
 
 func (b *Block) Serialize() []byte {

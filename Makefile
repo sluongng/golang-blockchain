@@ -6,7 +6,6 @@ GOTEST=${GOCMD} test
 GOGET=${GOCMD} get
 BUILD_PATH=./bin/
 BINARY_NAME=bc_cli
-BINARY_UNIX=${BINARY_NAME}_unix
 BINARY_PATH=${BUILD_PATH}${BINARY_NAME}
 
 docker:
@@ -17,7 +16,7 @@ database: docker
 build:
 	${GOBUILD} -o ${BINARY_PATH} -v
 
-run: build database
+run: build
 	${BINARY_PATH}
 
 clean:

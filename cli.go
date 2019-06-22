@@ -8,9 +8,7 @@ import (
 	"strconv"
 )
 
-type CLI struct {
-	bc *Blockchain
-}
+type CLI struct{}
 
 func (cli *CLI) validateArgs() {
 	if len(os.Args) < 2 {
@@ -21,23 +19,23 @@ func (cli *CLI) validateArgs() {
 
 func (cli *CLI) printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("  addblock -data <BLOCK_DATA> - add a block to the chain")
+	fmt.Println("  createchain -address <ADDRESS> - Create a blockchain and send genersis block reward to ADDRESS")
 	fmt.Println("  printchain - print all the blocks in the chain")
 }
 
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
-	addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
+	createBlockchainCmd := flag.NewFlagSet("createchain", flag.ExitOnError)
 
-	addBlockData := addBlockCmd.String("data", "", "Block data")
+	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 
 	switch os.Args[1] {
-	case "addblock":
-		err := addBlockCmd.Parse(os.Args[2:])
+	case "createchain":
+		err := createBlockchainCmd.Parse(os.Args[2:])
 		if err != nil {
-			log.Fatal("Invalid argument for addblock", err)
+			log.Fatal("Invalid argument for createchain", err)
 			cli.printUsage()
 		}
 	case "printchain":
@@ -51,13 +49,12 @@ func (cli *CLI) Run() {
 		os.Exit(1)
 	}
 
-	if addBlockCmd.Parsed() {
-		if *addBlockData == "" {
-			addBlockCmd.Usage()
+	if createBlockchainCmd.Parsed() {
+		if *createBlockchainAddress == "" {
+			createBlockchainCmd.Usage()
 			os.Exit(1)
 		}
-
-		cli.addBlock(*addBlockData)
+		cli.createBlockchain(*createBlockchainAddress)
 	}
 
 	if printChainCmd.Parsed() {
@@ -65,20 +62,24 @@ func (cli *CLI) Run() {
 	}
 }
 
-func (cli *CLI) addBlock(data string) {
-	cli.bc.AddBlock(data)
-
-	fmt.Println("Added block success!")
+func (cli *CLI) createBlockchain(address string) {
+	bc := CreateBlockchain(address)
+	bc.db.Close()
+	fmt.Println("Done!")
 }
 
 func (cli *CLI) printChain() {
-	ci := cli.bc.Iterator()
+	// TODO: This is creating a new BC, need fixing
+	bc := NewBlockchain("")
+	defer bc.db.Close()
+
+	ci := bc.Iterator()
 
 	for {
 		block := ci.Next()
 
 		fmt.Printf("Prev. Hash: %x\n", block.PrevBlockHash)
-		fmt.Printf("Data: %s\n", block.Data)
+		fmt.Printf("Transaction: %s\n", block.HashTransaction())
 		fmt.Printf("Hash: %x\n", block.Hash)
 
 		pow := NewProofOfWork(block)

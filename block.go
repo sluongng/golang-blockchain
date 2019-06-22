@@ -9,20 +9,20 @@ import (
 
 type Block struct {
 	Timestamp     int64
-	Data          []byte
+	Transaction   []*Transaction
 	PrevBlockHash []byte
 	Hash          []byte
 	Nonce         int
 }
 
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", []byte{})
+func NewGenesisBlock(coinbase *Transaction) *Block {
+	return NewBlock([]*Transaction{coinbase}, []byte{})
 }
 
-func NewBlock(data string, prevBlockHash []byte) *Block {
+func NewBlock(transactions []*Transaction, prevBlockHash []byte) *Block {
 	block := &Block{
 		time.Now().Unix(),
-		[]byte(data),
+		transactions,
 		prevBlockHash,
 		[]byte{},
 		0,
@@ -42,7 +42,7 @@ func (b *Block) Serialize() []byte {
 
 	err := encoder.Encode(b)
 	if err != nil {
-		log.Panic("Could not encode block: ", b.Data)
+		log.Panic("Could not encode block: ", err)
 	}
 
 	return result.Bytes()
@@ -54,7 +54,7 @@ func DeserializeBlock(d []byte) *Block {
 	decoder := gob.NewDecoder(bytes.NewReader(d))
 	err := decoder.Decode(&block)
 	if err != nil {
-		log.Panic("Could not decode data into block: ", d)
+		log.Panic("Could not decode data into block: ", err)
 	}
 
 	return &block

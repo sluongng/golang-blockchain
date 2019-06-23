@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"log"
 )
@@ -25,6 +26,41 @@ type TxInput struct {
 type TxOutput struct {
 	Value        int
 	ScriptPubKey string
+}
+
+func NewUTXTransaction(from, to string, amount int, bc *Blockchain) *Transaction {
+	var inputs []TxInput
+	var outputs []TxOutput
+
+	acc, validOutputs := bc.FindSpendableOutputs(from, amount)
+
+	if acc < amount {
+		log.Panic("Error: Insufficient funds")
+	}
+
+	// Build a list of inputs
+	for txIndex, outs := range validOutputs {
+		txID, err := hex.DecodeString(txIndex)
+		if err != nil {
+			log.Panic("Could not decode string", err)
+		}
+
+		for _, out := range outs {
+			input := TxInput{txID, out, from}
+			inputs = append(inputs, input)
+		}
+	}
+
+	outputs = append(outputs, TxOutput{amount, to})
+
+	if acc > amount {
+		outputs = append(outputs, TxOutput{acc - amount, from})
+	}
+
+	tx := Transaction{nil, inputs, outputs}
+	tx.SetID()
+
+	return &tx
 }
 
 func NewCoinbaseTX(to, data string) *Transaction {

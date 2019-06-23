@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -97,6 +98,66 @@ func CreateBlockchain(address string) *Blockchain {
 	}
 
 	return &Blockchain{tip, db}
+}
+
+func (bc *Blockchain) FindUnspentTransactions(address string) []Transaction {
+	var unspentTXs []Transaction
+	spentTXs := make(map[string][]int)
+	ci := bc.Iterator()
+
+	for {
+		block := ci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.VOut {
+				// Was the output spent?
+				if spentTXs[txID] != nil {
+					for _, spentOut := range spentTXs[txID] {
+						if spentOut == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				if out.CanBeUnlockedWith(address) {
+					unspentTXs = append(unspentTXs, *tx)
+				}
+			}
+
+			if !tx.IsCoinbase() {
+				for _, in := range tx.VIn {
+					if in.CanUnlockOutputWith(address) {
+						inTxID := hex.EncodeToString(in.TxID)
+						spentTXs[inTxID] = append(spentTXs[inTxID], in.VOut)
+					}
+				}
+			}
+		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
+	}
+
+	return unspentTXs
+}
+
+func (bc *Blockchain) FindUTX(address string) []TxOutput {
+	var UTXs []TxOutput
+	unspentTXs := bc.FindUnspentTransactions(address)
+
+	for _, tx := range unspentTXs {
+		for _, out := range tx.VOut {
+			if out.CanBeUnlockedWith(address) {
+				UTXs = append(UTXs, out)
+			}
+		}
+	}
+
+	return UTXs
 }
 
 func (bc *Blockchain) AddBlock(transactions []*Transaction) {

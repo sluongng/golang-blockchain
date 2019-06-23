@@ -28,12 +28,20 @@ func (cli *CLI) Run() {
 
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	createBlockchainCmd := flag.NewFlagSet("createchain", flag.ExitOnError)
+	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
+	getBalanceAddress := getBalanceCmd.String("address", "", "The address to search for balance")
 
 	switch os.Args[1] {
 	case "createchain":
 		err := createBlockchainCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Fatal("Invalid argument for createchain", err)
+			cli.printUsage()
+		}
+	case "getbalance":
+		err := getBalanceCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Fatal("Invalid argument for createchain", err)
 			cli.printUsage()
@@ -57,6 +65,14 @@ func (cli *CLI) Run() {
 		cli.createBlockchain(*createBlockchainAddress)
 	}
 
+	if getBalanceCmd.Parsed() {
+		if *getBalanceAddress == "" {
+			getBalanceCmd.Usage()
+			os.Exit(1)
+		}
+		cli.getBalance(*getBalanceAddress)
+	}
+
 	if printChainCmd.Parsed() {
 		cli.printChain()
 	}
@@ -68,8 +84,22 @@ func (cli *CLI) createBlockchain(address string) {
 	fmt.Println("Done!")
 }
 
+func (cli *CLI) getBalance(address string) {
+	bc := NewBlockchain(address)
+	defer bc.db.Close()
+
+	balance := 0
+	UTXs := bc.FindUTX(address)
+
+	for _, out := range UTXs {
+		balance += out.Value
+	}
+
+	fmt.Printf("Balance of '%s': %d\n", address, balance)
+}
+
 func (cli *CLI) printChain() {
-	// TODO: This is creating a new BC, need fixing
+	// TODO: No address?
 	bc := NewBlockchain("")
 	defer bc.db.Close()
 

@@ -10,7 +10,7 @@ import (
 
 type Block struct {
 	Timestamp     int64
-	Transaction   []*Transaction
+	Transactions  []*Transaction
 	PrevBlockHash []byte
 	Hash          []byte
 	Nonce         int
@@ -39,7 +39,7 @@ func NewBlock(transactions []*Transaction, prevBlockHash []byte) *Block {
 
 func (b *Block) HashTransaction() []byte {
 	var txHashes [][]byte
-	for _, tx := range b.Transaction {
+	for _, tx := range b.Transactions {
 		txHashes = append(txHashes, tx.ID)
 	}
 

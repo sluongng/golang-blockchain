@@ -28,10 +28,15 @@ func (cli *CLI) Run() {
 
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	createBlockchainCmd := flag.NewFlagSet("createchain", flag.ExitOnError)
-	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
-
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
+
+	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to search for balance")
+
+	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
+	sendFromAddress := sendCmd.String("from", "", "Address that you are sending from")
+	sendToAddress := sendCmd.String("to", "", "Address that you are sending to")
+	sendAmount := sendCmd.Int("amount", 0, "Amount being sent")
 
 	switch os.Args[1] {
 	case "createchain":
@@ -41,6 +46,12 @@ func (cli *CLI) Run() {
 			cli.printUsage()
 		}
 	case "getbalance":
+		err := getBalanceCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Fatal("Invalid argument for createchain", err)
+			cli.printUsage()
+		}
+	case "send":
 		err := getBalanceCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Fatal("Invalid argument for createchain", err)
@@ -73,9 +84,27 @@ func (cli *CLI) Run() {
 		cli.getBalance(*getBalanceAddress)
 	}
 
+	if sendCmd.Parsed() {
+		if *sendFromAddress == "" || *sendToAddress == "" || *sendAmount < 0 {
+			getBalanceCmd.Usage()
+			os.Exit(1)
+		}
+		cli.send(*sendFromAddress, *sendToAddress, *sendAmount)
+	}
+
 	if printChainCmd.Parsed() {
 		cli.printChain()
 	}
+}
+
+func (cli *CLI) send(from, to string, amount int) {
+	bc := NewBlockchain(from)
+	defer bc.db.Close()
+
+	tx := NewUTXTransaction(from, to, amount, bc)
+	bc.MineBlock([]*Transaction{tx})
+
+	fmt.Println("Success!")
 }
 
 func (cli *CLI) createBlockchain(address string) {

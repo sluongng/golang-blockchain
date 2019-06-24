@@ -184,7 +184,7 @@ func (bc *Blockchain) FindUTX(address string) []TxOutput {
 	return UTXs
 }
 
-func (bc *Blockchain) AddBlock(transactions []*Transaction) {
+func (bc *Blockchain) MineBlock(transactions []*Transaction) {
 	var lastHash []byte
 
 	// Get Last hash
@@ -219,5 +219,4 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 
 		return nil
 	})
-
 }

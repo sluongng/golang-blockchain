@@ -52,7 +52,7 @@ func (cli *CLI) Run() {
 			cli.printUsage()
 		}
 	case "send":
-		err := getBalanceCmd.Parse(os.Args[2:])
+		err := sendCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Fatal("Invalid argument for createchain", err)
 			cli.printUsage()
